@@ -4,11 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App';
 
 describe('App', () => {
-  it('renders the template home route', () => {
+  it('renders the todo home route', () => {
     render(<App />);
 
-    expect(
-      screen.getByRole('heading', { name: /frontend agent template is ready/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /todo app/i })).toBeInTheDocument();
   });
 });

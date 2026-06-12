@@ -48,37 +48,8 @@
   text-underline-offset: 4px;
 }
 
-.panel {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 48px;
-}
-
-.item {
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 20px;
-  background: var(--color-surface);
-}
-
-.itemTitle {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.itemText {
-  margin: 12px 0 0;
-  color: var(--color-muted);
-  line-height: 1.6;
-}
-
 @media (max-width: 720px) {
   .main {
     padding: 56px 0;
-  }
-
-  .panel {
-    grid-template-columns: 1fr;
   }
 }
