@@ -3,7 +3,7 @@
     "./todo-project/.venv/lib/python3.10/site-packages"
   ],
   "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.defaultFormatter": "ms-python.autopep8",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.fixAll": "explicit",
