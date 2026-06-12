@@ -1,0 +1,26 @@
+version: 1
+updated_at:
+
+current_run:
+  run_id:
+  mode: idle
+  max_subagents: 3
+  started_at:
+  updated_at:
+  notes:
+
+selected:
+  # Files selected for the next repair-runner execution.
+  files: []
+
+processing: []
+
+fixed_waiting_user_verification: []
+
+verified_waiting_archive: []
+
+blocked: []
+
+archived: []
+
+history: []

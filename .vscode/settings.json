@@ -1,0 +1,13 @@
+{
+  "python.analysis.extraPaths": [
+    "./todo-project/.venv/lib/python3.10/site-packages"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  }
+}

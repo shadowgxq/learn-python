@@ -1,0 +1,9 @@
+updated_at: 'YYYY-MM-DD'
+current:
+  title: 未规划 Manager 批次
+  batch: null
+  wave: null
+  next: 从 PRD 或需求文档生成 manager/plan.yaml 后，再运行 Manager。
+requirements: []
+openspec: []
+batches: []

@@ -1,0 +1,9 @@
+:root {
+  color-scheme: light;
+
+  --color-background: #f7f4ee;
+  --color-surface: #ffffff;
+  --color-text: #141414;
+  --color-muted: #5f6368;
+  --color-border: #ddd8cf;
+}
