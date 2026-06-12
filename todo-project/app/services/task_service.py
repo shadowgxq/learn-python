@@ -10,20 +10,20 @@ class TaskService:
     def __init__(self, repo: TaskRepository):
         self.repo = repo
 
-    def create_task(self, title: str) -> Task:
-        return self.repo.create(title)
+    def create_task(self, title: str, owner_id: int) -> Task:
+        return self.repo.create(title, owner_id)
 
-    def list_tasks(self) -> list[Task]:
-        return self.repo.get_all()
+    def list_tasks(self, owner_id: int) -> list[Task]:
+        return self.repo.get_by_owner(owner_id)
 
-    def update_task(self, task_id: int, title: str | None, completed: bool | None) -> Task:
-        task = self.repo.get_by_id(task_id)
+    def update_task(self, task_id: int, owner_id: int, title: str | None, completed: bool | None) -> Task:
+        task = self.repo.get_by_id_and_owner(task_id, owner_id)
         if task is None:
             raise HTTPException(status_code=404, detail="Task not found")
         return self.repo.update(task, title=title, completed=completed)
 
-    def delete_task(self, task_id: int) -> None:
-        task = self.repo.get_by_id(task_id)
+    def delete_task(self, task_id: int, owner_id: int) -> None:
+        task = self.repo.get_by_id_and_owner(task_id, owner_id)
         if task is None:
             raise HTTPException(status_code=404, detail="Task not found")
         self.repo.delete(task)

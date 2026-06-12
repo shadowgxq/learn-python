@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base import Base
 
@@ -16,3 +16,5 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(
         String(255), nullable=False
     )
+
+    tasks = relationship("Task", back_populates="owner")

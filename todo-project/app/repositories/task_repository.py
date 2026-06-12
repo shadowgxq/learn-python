@@ -9,8 +9,8 @@ class TaskRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, title: str) -> Task:
-        task = Task(title=title)
+    def create(self, title: str, owner_id: int) -> Task:
+        task = Task(title=title, owner_id=owner_id)
         self.db.add(task)
         self.db.commit()
         self.db.refresh(task)
@@ -19,8 +19,11 @@ class TaskRepository:
     def get_by_id(self, task_id: int) -> Task | None:
         return self.db.query(Task).filter(Task.id == task_id).first()
 
-    def get_all(self) -> list[Task]:
-        return self.db.query(Task).all()
+    def get_by_id_and_owner(self, task_id: int, owner_id: int) -> Task | None:
+        return self.db.query(Task).filter(Task.id == task_id, Task.owner_id == owner_id).first()
+
+    def get_by_owner(self, owner_id: int) -> list[Task]:
+        return self.db.query(Task).filter(Task.owner_id == owner_id).all()
 
     def update(self, task: Task, title: str | None = None, completed: bool | None = None) -> Task:
         if title is not None:

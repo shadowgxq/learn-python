@@ -16,6 +16,7 @@ class TaskRead(BaseModel):
     id: int
     title: str
     completed: bool
+    owner_id: int
 
     model_config = {
         "from_attributes": True,

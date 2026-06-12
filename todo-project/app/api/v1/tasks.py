@@ -20,7 +20,7 @@ def create_task(
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
-    return service.create_task(payload.title)
+    return service.create_task(payload.title, current_user.id)
 
 
 @router.get("", response_model=list[TaskRead])
@@ -28,7 +28,7 @@ def list_tasks(
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
-    return service.list_tasks()
+    return service.list_tasks(current_user.id)
 
 
 @router.patch("/{task_id}", response_model=TaskRead)
@@ -38,7 +38,7 @@ def update_task(
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
-    return service.update_task(task_id, payload.title, payload.completed)
+    return service.update_task(task_id, current_user.id, payload.title, payload.completed)
 
 
 @router.delete("/{task_id}")
@@ -47,5 +47,5 @@ def delete_task(
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
-    service.delete_task(task_id)
+    service.delete_task(task_id, current_user.id)
     return {"success": True}
