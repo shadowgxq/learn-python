@@ -1,6 +1,6 @@
-from sqlalchemy.orm import Session
-
+from sqlalchemy.orm import Session, joinedload
 from app.models.task import Task
+from app.models.user import User
 from app.schemas.task import TaskListParams
 
 
@@ -71,3 +71,22 @@ class TaskRepository:
     def delete(self, task: Task) -> None:
         self.db.delete(task)
         self.db.commit()
+
+    def get_by_owner_with_user(self, owner_id: int) -> list[Task]:
+        return (
+            self.db.query(Task)
+            .options(joinedload(Task.owner))
+            .filter(Task.owner_id == owner_id)
+            .order_by(Task.created_at.desc(), Task.id.desc())
+            .all()
+        )
+
+    def search_by_owner_username(self, username: str) -> list[Task]:
+        return (
+            self.db.query(Task)
+            .join(User, Task.owner_id == User.id)
+            .options(joinedload(Task.owner))
+            .filter(User.username == username)
+            .order_by(Task.created_at.desc(), Task.id.desc())
+            .all()
+        )

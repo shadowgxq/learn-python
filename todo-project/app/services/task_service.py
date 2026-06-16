@@ -28,3 +28,9 @@ class TaskService:
         if task is None:
             raise HTTPException(status_code=404, detail="Task not found")
         self.repo.delete(task)
+
+    def list_tasks_with_owner(self, owner_id: int) -> list[Task]:
+        return self.repo.get_by_owner_with_user(owner_id)
+
+    def search_tasks_by_owner_username(self, username: str) -> list[Task]:
+        return self.repo.search_by_owner_username(username)

@@ -55,3 +55,33 @@ class TaskListResponse(BaseModel):
     page: int
     page_size: int
     pages: int
+
+
+class TaskOwnerRead(BaseModel):
+    id: int
+    username: str
+
+    model_config = {
+        "from_attributes": True,
+    }
+
+
+class TaskWithOwnerRead(BaseModel):
+    id: int
+    title: str
+    completed: bool
+    owner_id: int
+    created_at: datetime
+    updated_at: datetime
+    owner: TaskOwnerRead
+
+    model_config = {
+        "from_attributes": True,
+    }
+
+    @field_serializer("created_at", "updated_at")
+    def _to_cst(self, value: datetime) -> str:
+        # 数据库存的是 UTC,统一转成东八区再输出(带 +08:00 偏移)
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(CST).isoformat()

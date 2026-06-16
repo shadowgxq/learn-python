@@ -12,6 +12,7 @@ from app.schemas.task import (
     TaskListResponse,
     TaskRead,
     TaskUpdate,
+    TaskWithOwnerRead,
 )
 from app.services.task_service import TaskService
 
@@ -73,3 +74,22 @@ def delete_task(
 ):
     service.delete_task(task_id, current_user.id)
     return {"success": True}
+
+
+@router.get("/with-owner", response_model=list[TaskWithOwnerRead])
+def list_tasks_with_owner(
+    service: TaskService = Depends(get_task_service),
+    current_user: User = Depends(get_current_user),
+):
+    return service.list_tasks_with_owner(current_user.id)
+
+
+# 学习用：按用户名 JOIN users 表查询任务。
+# 真实项目里不要随便让普通用户按别人的 username 查任务。
+@router.get("/search-by-owner", response_model=list[TaskWithOwnerRead])
+def search_tasks_by_owner(
+    username: str,
+    service: TaskService = Depends(get_task_service),
+    current_user: User = Depends(get_current_user),
+):
+    return service.search_tasks_by_owner_username(username)
