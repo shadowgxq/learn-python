@@ -2,6 +2,7 @@ from fastapi import HTTPException
 
 from app.models.task import Task
 from app.repositories.task_repository import TaskRepository
+from app.schemas.task import TaskListParams
 
 
 class TaskService:
@@ -13,8 +14,8 @@ class TaskService:
     def create_task(self, title: str, owner_id: int) -> Task:
         return self.repo.create(title, owner_id)
 
-    def list_tasks(self, owner_id: int) -> list[Task]:
-        return self.repo.get_by_owner(owner_id)
+    def list_tasks(self, owner_id: int, params: TaskListParams) -> tuple[list[Task], int]:
+        return self.repo.search_by_owner(owner_id=owner_id, params=params)
 
     def update_task(self, task_id: int, owner_id: int, title: str | None, completed: bool | None) -> Task:
         task = self.repo.get_by_id_and_owner(task_id, owner_id)

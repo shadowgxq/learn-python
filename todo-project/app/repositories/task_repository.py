@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.models.task import Task
+from app.schemas.task import TaskListParams
 
 
 class TaskRepository:
@@ -24,6 +25,39 @@ class TaskRepository:
 
     def get_by_owner(self, owner_id: int) -> list[Task]:
         return self.db.query(Task).filter(Task.owner_id == owner_id).all()
+
+    def search_by_owner(self, owner_id: int, params: TaskListParams) -> tuple[list[Task], int]:
+        query = self.db.query(Task).filter(Task.owner_id == owner_id)
+
+        if params.completed is not None:
+            query = query.filter(Task.completed == params.completed)
+
+        if params.keyword:
+            query = query.filter(Task.title.ilike(f"%{params.keyword}%"))
+
+        total = query.count()
+
+        sort_columns = {
+            "id": Task.id,
+            "title": Task.title,
+            "completed": Task.completed,
+            "created_at": Task.created_at,
+            "updated_at": Task.updated_at,
+        }
+
+        sort_column = sort_columns[params.sort_by]
+
+        primary_order = sort_column.desc() if params.sort_order == "desc" else sort_column.asc()
+
+        if params.sort_by == "created_at":
+            query = query.order_by(primary_order)
+        else:
+            query = query.order_by(primary_order, Task.id.desc())
+
+        offset = (params.page - 1) * params.page_size
+        items = query.offset(offset).limit(params.page_size).all()
+
+        return items, total
 
     def update(self, task: Task, title: str | None = None, completed: bool | None = None) -> Task:
         if title is not None:

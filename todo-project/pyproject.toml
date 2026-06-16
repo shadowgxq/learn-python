@@ -23,3 +23,13 @@ dev = [
     "pytest>=9.0.3",
     "ruff>=0.15.14",
 ]
+
+# SQLAlchemy 2.0 的 Mapped/mapped_column、func.xxx() 在运行时由 DeclarativeBase
+# 元类和 _FunctionGenerator 动态生成，pylint 静态分析无法识别，会对模型字段
+# (no-member) 和 func.now() (not-callable) 误报。本项目以 ruff + Pylance 为准，
+# 这里关闭这两类 pylint 误报。
+[tool.pylint."messages control"]
+disable = [
+    "no-member",
+    "not-callable",
+]

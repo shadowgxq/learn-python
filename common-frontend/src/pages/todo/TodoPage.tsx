@@ -1,7 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useAuthStore } from '../../features/auth/auth.store';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '../../features/tasks/useTasks';
 import styles from './TodoPage.module.css';
+
+const PAGE_SIZE = 10;
+
+type StatusFilter = 'all' | 'active' | 'completed';
 
 export default function TodoPage() {
   const { user, token, login, register, logout } = useAuthStore();
@@ -10,12 +14,51 @@ export default function TodoPage() {
   const [authError, setAuthError] = useState('');
   const [newTitle, setNewTitle] = useState('');
 
-  const { data: tasks, isLoading } = useTasks();
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [keywordInput, setKeywordInput] = useState('');
+  const [keyword, setKeyword] = useState('');
+
+  // 搜索输入做 300ms 防抖，避免每次按键都请求；关键词变化时回到第一页。
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setKeyword(keywordInput.trim());
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [keywordInput]);
+
+  const completed = statusFilter === 'all' ? undefined : statusFilter === 'completed';
+
+  const { data, isLoading } = useTasks({
+    page,
+    page_size: PAGE_SIZE,
+    completed,
+    keyword: keyword || undefined,
+  });
+
+  const tasks = data?.items;
+  const total = data?.total ?? 0;
+  const totalPages = data?.pages ?? 0;
+
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
 
   const isLoggedIn = !!token && !!user;
+
+  function handleStatusChange(next: StatusFilter) {
+    setStatusFilter(next);
+    setPage(1);
+  }
+
+  function handleDelete(id: number) {
+    // 删除当前页最后一条时回退到上一页，避免停留在空白页。
+    if (tasks?.length === 1 && page > 1) {
+      setPage((p) => Math.max(1, p - 1));
+    }
+    deleteTask.mutate(id);
+  }
 
   async function handleAuth(type: 'login' | 'register') {
     setAuthError('');
@@ -103,32 +146,87 @@ export default function TodoPage() {
         </button>
       </form>
 
+      <div className={styles.toolbar}>
+        <input
+          className={styles.input}
+          placeholder="搜索任务..."
+          value={keywordInput}
+          onChange={(e) => setKeywordInput(e.target.value)}
+        />
+        <div className={styles.filterGroup}>
+          {(
+            [
+              { value: 'all', label: '全部' },
+              { value: 'active', label: '未完成' },
+              { value: 'completed', label: '已完成' },
+            ] as const
+          ).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={statusFilter === option.value ? styles.filterActive : styles.filterBtn}
+              onClick={() => handleStatusChange(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {isLoading ? (
         <p className={styles.empty}>加载中...</p>
       ) : tasks && tasks.length > 0 ? (
-        <ul className={styles.list}>
-          {tasks.map((task) => (
-            <li key={task.id} className={styles.item}>
-              <label className={styles.itemLabel}>
-                <input
-                  type="checkbox"
-                  checked={task.completed}
-                  onChange={() => updateTask.mutate({ id: task.id, data: { completed: !task.completed } })}
-                />
-                <span className={task.completed ? styles.done : undefined}>{task.title}</span>
-              </label>
+        <>
+          <ul className={styles.list}>
+            {tasks.map((task) => (
+              <li key={task.id} className={styles.item}>
+                <label className={styles.itemLabel}>
+                  <input
+                    type="checkbox"
+                    checked={task.completed}
+                    onChange={() => updateTask.mutate({ id: task.id, data: { completed: !task.completed } })}
+                  />
+                  <span className={task.completed ? styles.done : undefined}>{task.title}</span>
+                </label>
+                <button
+                  className={styles.btnDelete}
+                  onClick={() => handleDelete(task.id)}
+                  aria-label="删除"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          <div className={styles.pagination}>
+            <span className={styles.pageInfo}>
+              共 {total} 条 · 第 {page} / {totalPages} 页
+            </span>
+            <div className={styles.pageActions}>
               <button
-                className={styles.btnDelete}
-                onClick={() => deleteTask.mutate(task.id)}
-                aria-label="删除"
+                type="button"
+                className={styles.btnSecondary}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
               >
-                ×
+                上一页
               </button>
-            </li>
-          ))}
-        </ul>
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        </>
       ) : (
-        <p className={styles.empty}>暂无任务，添加一个吧</p>
+        <p className={styles.empty}>
+          {keyword || statusFilter !== 'all' ? '没有符合条件的任务' : '暂无任务，添加一个吧'}
+        </p>
       )}
     </div>
   );

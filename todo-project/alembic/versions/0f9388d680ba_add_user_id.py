@@ -27,7 +27,8 @@ def upgrade() -> None:
     op.execute("UPDATE tasks SET owner_id = 1 WHERE owner_id IS NULL")
     # 改为 NOT NULL
     op.alter_column('tasks', 'owner_id', nullable=False)
-    op.create_index(op.f('ix_tasks_owner_id'), 'tasks', ['owner_id'], unique=False)
+    op.create_index(op.f('ix_tasks_owner_id'), 'tasks',
+                    ['owner_id'], unique=False)
     op.create_foreign_key(None, 'tasks', 'users', ['owner_id'], ['id'])
     # ### end Alembic commands ###
 

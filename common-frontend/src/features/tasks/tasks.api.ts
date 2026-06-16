@@ -1,9 +1,9 @@
 import { request } from '../../shared/api';
-import type { Task, TaskCreate, TaskUpdate } from './tasks.types';
+import type { Task, TaskCreate, TaskListParams, TaskListResponse, TaskUpdate } from './tasks.types';
 
 export const tasksApi = {
-  list() {
-    return request<Task[]>({ url: '/v1/tasks' });
+  list(params?: TaskListParams) {
+    return request<TaskListResponse>({ url: '/v1/tasks', params });
   },
 
   create(data: TaskCreate) {

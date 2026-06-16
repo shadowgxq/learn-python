@@ -116,6 +116,61 @@
   flex: 1;
 }
 
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.toolbar .input {
+  flex: 1;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 4px;
+}
+
+.filterBtn,
+.filterActive {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filterActive {
+  background: var(--color-text);
+  color: var(--color-background);
+  border-color: var(--color-text);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.pageInfo {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.pageActions {
+  display: flex;
+  gap: 8px;
+}
+
+.pageActions .btnSecondary {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
 .list {
   list-style: none;
   padding: 0;

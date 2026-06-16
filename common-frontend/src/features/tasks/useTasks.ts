@@ -1,11 +1,16 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { tasksApi } from './tasks.api';
-import type { TaskCreate, TaskUpdate } from './tasks.types';
+import type { TaskCreate, TaskListParams, TaskUpdate } from './tasks.types';
 
 const TASKS_KEY = ['tasks'];
 
-export function useTasks() {
-  return useQuery({ queryKey: TASKS_KEY, queryFn: tasksApi.list });
+export function useTasks(params: TaskListParams = {}) {
+  return useQuery({
+    queryKey: [...TASKS_KEY, params],
+    queryFn: () => tasksApi.list(params),
+    // 翻页/筛选时保留上一页数据，避免列表闪烁为空。
+    placeholderData: keepPreviousData,
+  });
 }
 
 export function useCreateTask() {
