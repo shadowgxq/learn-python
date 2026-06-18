@@ -21,7 +21,7 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
 def get_task_service(db=Depends(get_db)) -> TaskService:
-    return TaskService(TaskRepository(db))
+    return TaskService(TaskRepository(db), db)
 
 
 @router.post("", response_model=TaskRead)

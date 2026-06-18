@@ -13,8 +13,7 @@ class TaskRepository:
     def create(self, title: str, owner_id: int) -> Task:
         task = Task(title=title, owner_id=owner_id)
         self.db.add(task)
-        self.db.commit()
-        self.db.refresh(task)
+        self.db.flush()
         return task
 
     def get_by_id(self, task_id: int) -> Task | None:
@@ -64,13 +63,10 @@ class TaskRepository:
             task.title = title
         if completed is not None:
             task.completed = completed
-        self.db.commit()
-        self.db.refresh(task)
         return task
 
     def delete(self, task: Task) -> None:
         self.db.delete(task)
-        self.db.commit()
 
     def get_by_owner_with_user(self, owner_id: int) -> list[Task]:
         return (
