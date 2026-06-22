@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.models.task import Task
 from app.repositories.task_repository import TaskRepository
-from app.schemas.task import TaskListParams
+from app.schemas.task import TaskQueryParams
 
 
 class TaskService:
@@ -24,8 +24,8 @@ class TaskService:
             self.db.rollback()
             raise
 
-    def list_tasks(self, owner_id: int, params: TaskListParams) -> tuple[list[Task], int]:
-        return self.repo.search_by_owner(owner_id=owner_id, params=params)
+    def list_tasks(self, params: TaskQueryParams) -> tuple[list[Task], int]:
+        return self.repo.search_by_owner(params)
 
     def update_task(
         self,

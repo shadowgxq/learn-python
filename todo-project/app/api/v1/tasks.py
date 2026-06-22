@@ -39,7 +39,7 @@ def list_tasks(
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
-    items, total = service.list_tasks(owner_id=current_user.id, params=params)
+    items, total = service.list_tasks(params.to_query(current_user.id))
     pages = (total + params.page_size - 1) // params.page_size
 
     return TaskListResponse(
