@@ -12,7 +12,13 @@ from app.core.exception_handlers import (
 )
 from app.core.exceptions import BusinessException
 
+from app.core.logging import setup_logging
+from app.core.middlewares import request_log_middleware
+
+setup_logging()
 app = FastAPI(title="Demo API")
+
+app.middleware("http")(request_log_middleware)
 
 # 注册统一异常处理器
 app.add_exception_handler(BusinessException, business_exception_handler)
