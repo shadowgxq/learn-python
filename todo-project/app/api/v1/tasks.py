@@ -14,6 +14,7 @@ from app.schemas.task import (
     TaskUpdate,
     TaskWithOwnerRead,
 )
+from app.schemas.response import ApiResponse, success_response
 from app.services.task_service import TaskService
 
 
@@ -24,16 +25,17 @@ def get_task_service(db=Depends(get_db)) -> TaskService:
     return TaskService(TaskRepository(db), db)
 
 
-@router.post("", response_model=TaskRead)
+@router.post("", response_model=ApiResponse[TaskRead])
 def create_task(
     payload: TaskCreate,
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
-    return service.create_task(payload.title, current_user.id)
+    task = service.create_task(payload.title, current_user.id)
+    return success_response(task)
 
 
-@router.get("", response_model=TaskListResponse)
+@router.get("", response_model=ApiResponse[TaskListResponse])
 def list_tasks(
     params: TaskListParams = Depends(),
     service: TaskService = Depends(get_task_service),
@@ -42,54 +44,58 @@ def list_tasks(
     items, total = service.list_tasks(params.to_query(current_user.id))
     pages = (total + params.page_size - 1) // params.page_size
 
-    return TaskListResponse(
+    data = TaskListResponse(
         items=items,
         total=total,
         page=params.page,
         page_size=params.page_size,
         pages=pages,
     )
+    return success_response(data)
 
 
-@router.patch("/{task_id}", response_model=TaskRead)
+@router.patch("/{task_id}", response_model=ApiResponse[TaskRead])
 def update_task(
     task_id: int,
     payload: TaskUpdate,
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
-    return service.update_task(
+    task = service.update_task(
         task_id,
         current_user.id,
         payload.title,
         payload.completed,
     )
+    return success_response(task)
 
 
-@router.delete("/{task_id}")
+@router.delete("/{task_id}", response_model=ApiResponse[None])
 def delete_task(
     task_id: int,
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
     service.delete_task(task_id, current_user.id)
-    return {"success": True}
+    return success_response()
 
 
-@router.get("/with-owner", response_model=list[TaskWithOwnerRead])
+@router.get("/with-owner", response_model=ApiResponse[list[TaskWithOwnerRead]])
 def list_tasks_with_owner(
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
-    return service.list_tasks_with_owner(current_user.id)
+    tasks = service.list_tasks_with_owner(current_user.id)
+    return success_response(tasks)
 
 
 # 学习用：按用户名 JOIN users 表查询任务。
 # 真实项目里不要随便让普通用户按别人的 username 查任务。
-@router.get("/search-by-owner", response_model=list[TaskWithOwnerRead])
+@router.get("/search-by-owner", response_model=ApiResponse[list[TaskWithOwnerRead]])
 def search_tasks_by_owner(
     username: str,
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_current_user),
 ):
-    return service.search_tasks_by_owner_username(username)
+    tasks = service.search_tasks_by_owner_username(username)
+    return success_response(tasks)
