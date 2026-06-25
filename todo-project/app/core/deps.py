@@ -5,10 +5,12 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import TokenRevokedException
 from app.core.security import decode_access_token
 from app.core.session import get_db
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
+from app.services import auth_redis_service
 from app.services.cache_service import get_user_cache, set_user_cache
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,11 @@ def get_current_user(
         user_id = int(user_id)
     except JWTError:
         raise credentials_exception
+
+    # token 已被加入黑名单（退出登录），直接拒绝
+    jti = payload.get("jti")
+    if jti is not None and auth_redis_service.is_token_blacklisted(jti):
+        raise TokenRevokedException()
 
     # 1. 先查 Redis 缓存（缓存失败时降级到数据库）
     try:

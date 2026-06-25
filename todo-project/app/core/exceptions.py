@@ -58,3 +58,25 @@ class LoginFailedException(BusinessException):
             message="Invalid username or password",
             status_code=401,
         )
+
+
+class LoginLockedException(BusinessException):
+    """登录失败次数过多，账号暂时锁定。"""
+
+    def __init__(self):
+        super().__init__(
+            code=42901,
+            message="Too many login failures, please try again later",
+            status_code=429,
+        )
+
+
+class TokenRevokedException(BusinessException):
+    """Token 已失效（已退出登录）。"""
+
+    def __init__(self):
+        super().__init__(
+            code=40102,
+            message="Token has been revoked",
+            status_code=401,
+        )

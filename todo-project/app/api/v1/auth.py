@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, oauth2_scheme
+from app.core.security import decode_access_token, get_token_ttl_seconds
 from app.core.session import get_db
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
@@ -11,6 +12,7 @@ from app.schemas.auth import (
     TokenResponse,
 )
 from app.schemas.response import ApiResponse, success_response
+from app.services import auth_redis_service
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -41,3 +43,13 @@ def login(
 @router.get("/me", response_model=ApiResponse[CurrentUserResponse])
 def get_me(current_user: User = Depends(get_current_user)):
     return success_response({"id": current_user.id, "username": current_user.username})
+
+
+@router.post("/logout", response_model=ApiResponse[None])
+def logout(token: str = Depends(oauth2_scheme)):
+    payload = decode_access_token(token)
+    jti = payload.get("jti")
+    if jti is not None:
+        ttl_seconds = get_token_ttl_seconds(payload)
+        auth_redis_service.blacklist_token(jti, ttl_seconds)
+    return success_response()
