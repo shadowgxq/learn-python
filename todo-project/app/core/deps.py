@@ -1,5 +1,3 @@
-import logging
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
@@ -12,8 +10,6 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.services import auth_redis_service
 from app.services.cache_service import get_user_cache, set_user_cache
-
-logger = logging.getLogger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -37,22 +33,20 @@ def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    # token 已被加入黑名单（退出登录），直接拒绝
+    # token 已被加入黑名单（退出登录），直接拒绝。
+    # is_token_blacklisted 内部已容错：Redis 故障时返回 False（fail-open）
     jti = payload.get("jti")
     if jti is not None and auth_redis_service.is_token_blacklisted(jti):
         raise TokenRevokedException()
 
-    # 1. 先查 Redis 缓存（缓存失败时降级到数据库）
-    try:
-        cached_user = get_user_cache(user_id)
-        if cached_user:
-            return User(
-                id=cached_user["id"],
-                username=cached_user["username"],
-                password_hash="",
-            )
-    except Exception as e:
-        logger.warning(f"Redis 缓存读取失败，降级查数据库: {e}")
+    # 1. 先查 Redis 缓存（get_user_cache 内部已容错，故障时返回 None 自动回源）
+    cached_user = get_user_cache(user_id)
+    if cached_user:
+        return User(
+            id=cached_user["id"],
+            username=cached_user["username"],
+            password_hash="",
+        )
 
     # 2. 缓存未命中或 Redis 不可用，查数据库
     repo = UserRepository(db)
@@ -60,13 +54,10 @@ def get_current_user(
     if user is None:
         raise credentials_exception
 
-    # 3. 写入缓存（失败不影响主流程）
-    try:
-        set_user_cache(
-            user_id=user.id,
-            user_data={"id": user.id, "username": user.username},
-        )
-    except Exception as e:
-        logger.warning(f"Redis 缓存写入失败: {e}")
+    # 3. 写入缓存（set_user_cache 内部已容错，失败不影响主流程）
+    set_user_cache(
+        user_id=user.id,
+        user_data={"id": user.id, "username": user.username},
+    )
 
     return user

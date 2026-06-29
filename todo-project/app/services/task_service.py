@@ -4,6 +4,7 @@ from app.models.task import Task
 from app.repositories.task_repository import TaskRepository
 from app.schemas.task import TaskQueryParams
 from app.core.exceptions import TaskNotFoundException
+from app.core.session import transaction
 
 
 class TaskService:
@@ -14,16 +15,10 @@ class TaskService:
         self.db = db
 
     def create_task(self, title: str, owner_id: int) -> Task:
-        try:
+        with transaction(self.db):
             task = self.repo.create(title=title, owner_id=owner_id)
-
-            self.db.commit()
-            self.db.refresh(task)
-
-            return task
-        except Exception:
-            self.db.rollback()
-            raise
+        self.db.refresh(task)  # commit 后刷新，拿到数据库生成的 id/时间戳
+        return task
 
     def list_tasks(self, params: TaskQueryParams) -> tuple[list[Task], int]:
         return self.repo.search_by_owner(params)
@@ -35,36 +30,23 @@ class TaskService:
         title: str | None,
         completed: bool | None,
     ) -> Task:
-        try:
-            task = self.repo.get_by_id_and_owner(task_id, owner_id)
-            if task is None:
-                raise TaskNotFoundException()
-            task = self.repo.update(
-                task,
-                title=title,
-                completed=completed,
-            )
-            self.db.commit()
-            self.db.refresh(task)
-            return task
-        except Exception:
-            self.db.rollback()
-            raise
+        # 查询不属于事务：找不到直接抛，无需回滚（没有未提交的写）
+        task = self.repo.get_by_id_and_owner(task_id, owner_id)
+        if task is None:
+            raise TaskNotFoundException()
+
+        with transaction(self.db):
+            task = self.repo.update(task, title=title, completed=completed)
+        self.db.refresh(task)
+        return task
 
     def delete_task(self, task_id: int, owner_id: int) -> None:
-        try:
-            task = self.repo.get_by_id_and_owner(task_id, owner_id)
+        task = self.repo.get_by_id_and_owner(task_id, owner_id)
+        if task is None:
+            raise TaskNotFoundException()
 
-            if task is None:
-                raise TaskNotFoundException()
-
+        with transaction(self.db):
             self.repo.delete(task)
-
-            self.db.commit()
-
-        except Exception:
-            self.db.rollback()
-            raise
 
     def list_tasks_with_owner(self, owner_id: int) -> list[Task]:
         return self.repo.get_by_owner_with_user(owner_id)

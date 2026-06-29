@@ -1,9 +1,11 @@
 import json
 
-from app.core.redis_client import redis_client
+from app.core.redis_client import redis_client, redis_safe
 
 
+@redis_safe(default=None)
 def get_json(key: str) -> dict | None:
+    """读缓存。Redis 故障时降级返回 None（调用方按"未命中"处理，回源查库）。"""
     value = redis_client.get(key)
 
     if value is None:
@@ -12,7 +14,9 @@ def get_json(key: str) -> dict | None:
     return json.loads(value)
 
 
+@redis_safe()
 def set_json(key: str, value: dict, expire_seconds: int = 300) -> None:
+    """写缓存。Redis 故障时静默降级，不影响主流程。"""
     redis_client.set(
         key,
         json.dumps(value, ensure_ascii=False),
@@ -20,7 +24,9 @@ def set_json(key: str, value: dict, expire_seconds: int = 300) -> None:
     )
 
 
+@redis_safe()
 def delete_key(key: str) -> None:
+    """删缓存。Redis 故障时静默降级。"""
     redis_client.delete(key)
 
 
